@@ -45,15 +45,20 @@ def main():
         n=env_cfg["n"],
         alpha=agent_cfg["alpha"],
         gamma=agent_cfg["gamma"],
+        exploration=agent_cfg.get("exploration", "epsilon_greedy"),
         epsilon=agent_cfg["epsilon"],
         epsilon_decay=agent_cfg["epsilon_decay"],
         min_epsilon=agent_cfg["min_epsilon"],
+        temperature=agent_cfg.get("temperature", 1.0),
+        temperature_decay=agent_cfg.get("temperature_decay", 1.0),
+        min_temperature=agent_cfg.get("min_temperature", 0.1),
     )
 
     n_states = num_states(env_cfg["n"])
     n_episodes = train_cfg["n_episodes"]
+    exploration = agent_cfg.get("exploration", "epsilon_greedy")
     print(f"Training on {env_cfg['n']}x{env_cfg['n']} grid | {n_states} states | {n_episodes} episodes")
-    print(f"alpha={agent_cfg['alpha']}, gamma={agent_cfg['gamma']}, epsilon={agent_cfg['epsilon']}\n")
+    print(f"alpha={agent_cfg['alpha']}, gamma={agent_cfg['gamma']}, exploration={exploration}\n")
 
     logs = agent.train(
         env,

@@ -7,8 +7,11 @@ import numpy as np
 from .state_utils import num_states, state_to_index
 
 
+EXPLORATION_STRATEGIES = ("epsilon_greedy", "softmax")
+
+
 class QLearningAgent:
-    """Tabular Q-learning agent with epsilon-greedy exploration."""
+    """Tabular Q-learning agent with pluggable exploration strategies."""
 
     def __init__(
         self,
@@ -16,9 +19,13 @@ class QLearningAgent:
         num_actions: int = 4,
         alpha: float = 0.1,
         gamma: float = 0.99,
+        exploration: str = "epsilon_greedy",
         epsilon: float = 0.1,
         epsilon_decay: float = 1.0,
         min_epsilon: float = 0.01,
+        temperature: float = 1.0,
+        temperature_decay: float = 1.0,
+        min_temperature: float = 0.1,
     ):
         """Initialize the Q-learning agent.
 
@@ -27,16 +34,26 @@ class QLearningAgent:
             num_actions: Number of actions (default 4).
             alpha: Learning rate.
             gamma: Discount factor.
-            epsilon: Exploration probability (epsilon-greedy).
+            exploration: Exploration strategy — "epsilon_greedy" or "softmax".
+            epsilon: Exploration probability for epsilon-greedy.
             epsilon_decay: Multiplicative decay per episode (1.0 = no decay).
-            min_epsilon: Minimum exploration rate.
+            min_epsilon: Minimum epsilon.
+            temperature: Softmax temperature (higher = more uniform).
+            temperature_decay: Multiplicative decay per episode (1.0 = no decay).
+            min_temperature: Minimum temperature.
         """
+        if exploration not in EXPLORATION_STRATEGIES:
+            raise ValueError(f"exploration must be one of {EXPLORATION_STRATEGIES}, got {exploration!r}")
         self.n = n
         self.alpha = alpha
         self.gamma = gamma
+        self.exploration = exploration
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
         self.min_epsilon = min_epsilon
+        self.temperature = temperature
+        self.temperature_decay = temperature_decay
+        self.min_temperature = min_temperature
         n_states = num_states(n)
         self.q_table = np.zeros((n_states, num_actions))
 
@@ -44,20 +61,36 @@ class QLearningAgent:
         """Convert observation tuple to state index."""
         return state_to_index(observation, self.n)
 
+    def _softmax_probs(self, q_values: np.ndarray) -> np.ndarray:
+        """Compute numerically stable softmax probabilities over Q-values."""
+        shifted = q_values - np.max(q_values)
+        exp_q = np.exp(shifted / self.temperature)
+        return exp_q / exp_q.sum()
+
     def sample_action(self, observation: tuple, training: bool = True) -> int:
-        """Select action using epsilon-greedy policy.
+        """Select action using the configured exploration strategy.
 
         Args:
             observation: (agent_x, agent_y, token_x, token_y, collected).
-            training: If True, use epsilon-greedy; else use greedy.
+            training: If True, apply exploration; else use greedy.
 
         Returns:
             Action index in {0, 1, 2, 3} (up, down, right, left).
         """
         state_idx = self._get_state_index(observation)
-        if training and np.random.random() < self.epsilon:
-            return np.random.randint(4)
-        return int(np.argmax(self.q_table[state_idx]))
+        q_values = self.q_table[state_idx]
+
+        if not training:
+            return int(np.argmax(q_values))
+
+        if self.exploration == "epsilon_greedy":
+            if np.random.random() < self.epsilon:
+                return np.random.randint(len(q_values))
+            return int(np.argmax(q_values))
+
+        # softmax
+        probs = self._softmax_probs(q_values)
+        return int(np.random.choice(len(q_values), p=probs))
 
     def update(
         self,
@@ -86,6 +119,10 @@ class QLearningAgent:
     def decay_epsilon(self) -> None:
         """Apply epsilon decay (call after each episode)."""
         self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
+
+    def decay_temperature(self) -> None:
+        """Apply temperature decay (call after each episode)."""
+        self.temperature = max(self.min_temperature, self.temperature * self.temperature_decay)
 
     def save(self, path: str | Path) -> None:
         """Save Q-table to file."""
@@ -148,17 +185,22 @@ class QLearningAgent:
                 success_counts.append(0)
             
             self.decay_epsilon()
+            self.decay_temperature()
 
             if (ep + 1) % log_interval == 0:
                 recent_rewards = episode_rewards[-log_interval:]
                 recent_success_counts = success_counts[-log_interval:]
                 recent_episode_lengths = episode_lengths[-log_interval:]
+                if self.exploration == "softmax":
+                    explore_str = f"Temperature: {self.temperature:.4f}"
+                else:
+                    explore_str = f"Epsilon: {self.epsilon:.4f}"
                 print(
                     f"Episode {ep + 1}/{num_episodes} | "
                     f"Avg reward: {np.mean(recent_rewards):.2f} | "
                     f"Avg success rate: {np.mean(recent_success_counts) / len(recent_success_counts) * 100:.1%}% | "
                     f"Avg episode length: {np.mean(recent_episode_lengths):.1f} | "
-                    f"Epsilon: {self.epsilon:.4f}"
+                    f"{explore_str}"
                 )
 
         logs = {

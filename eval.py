@@ -43,9 +43,13 @@ def main():
         n=env_cfg["n"],
         alpha=agent_cfg["alpha"],
         gamma=agent_cfg["gamma"],
+        exploration=agent_cfg.get("exploration", "epsilon_greedy"),
         epsilon=agent_cfg["epsilon"],
         epsilon_decay=agent_cfg["epsilon_decay"],
         min_epsilon=agent_cfg["min_epsilon"],
+        temperature=agent_cfg.get("temperature", 1.0),
+        temperature_decay=agent_cfg.get("temperature_decay", 1.0),
+        min_temperature=agent_cfg.get("min_temperature", 0.1),
     )
     agent.load(save_dir / "q_table.npy")
 
