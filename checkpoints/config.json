@@ -1,8 +1,0 @@
-{
-  "n": 5,
-  "episodes": 100,
-  "alpha": 0.1,
-  "gamma": 0.99,
-  "epsilon": 0.1,
-  "num_states": 650
-}
