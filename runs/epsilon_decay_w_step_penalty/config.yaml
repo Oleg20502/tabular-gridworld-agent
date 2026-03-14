@@ -3,7 +3,7 @@ env:
   max_steps: 1000
   step_penalty: -1
   collect_reward: 10.0
-  goal_reward: 10.0
+  goal_reward: 20.0
   goal_without_token_reward: 0.0
 
 agent:
