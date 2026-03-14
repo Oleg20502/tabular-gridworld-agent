@@ -1,7 +1,7 @@
 env:
   n: 10               # Grid size (NxN)
-  max_steps: 400      # Max steps per episode before truncation (null = 4*n^2)
-  step_penalty: -0.01
+  max_steps: 1000
+  step_penalty: -1.0
   collect_reward: 1.0
   goal_reward: 10.0
   goal_without_token_reward: 0.0
@@ -14,7 +14,7 @@ agent:
   min_epsilon: 0.01   # Minimum exploration rate
 
 train:
-  save_dir: "runs/exp1"
+  save_dir: "runs/step_penalty"
   n_episodes: 10000
-  log_interval: 100
+  log_interval: 500
   seed: 42

@@ -118,15 +118,15 @@ class QLearningAgent:
         if seed is not None:
             np.random.seed(seed)
 
-        episode_rewards: list[float] = []
-        success_count = 0
+        episode_rewards = []
+        success_counts = []
+        episode_lengths = []
         max_steps = max_steps_per_episode or self.n**2 * 4
 
         for ep in range(num_episodes):
             obs, info = env.reset(seed=seed if ep == 0 else None)
             total_reward = 0.0
             steps = 0
-
             while steps < max_steps:
                 action = self.sample_action(obs, training=True)
                 next_obs, reward, terminated, truncated, info = env.step(action)
@@ -138,27 +138,41 @@ class QLearningAgent:
                 steps += 1
                 if terminated or truncated:
                     break
-
+            episode_lengths.append(steps)
             episode_rewards.append(total_reward)
-            if terminated:
-                success_count += 1
+
+            if info["reached_goal_with_token"]:
+                success_counts.append(1)
+            else:
+                success_counts.append(0)
+            
             self.decay_epsilon()
 
             if (ep + 1) % log_interval == 0:
-                recent = episode_rewards[-log_interval:]
+                recent_rewards = episode_rewards[-log_interval:]
+                recent_success_counts = success_counts[-log_interval:]
+                recent_episode_lengths = episode_lengths[-log_interval:]
                 print(
                     f"Episode {ep + 1}/{num_episodes} | "
-                    f"Avg reward: {np.mean(recent):.2f} | "
+                    f"Avg reward: {np.mean(recent_rewards):.2f} | "
+                    f"Avg success rate: {np.mean(recent_success_counts) / len(recent_success_counts) * 100:.1%}% | "
+                    f"Avg episode length: {np.mean(recent_episode_lengths):.1f} | "
                     f"Epsilon: {self.epsilon:.4f}"
                 )
 
-        return episode_rewards, success_count
+        logs = {
+            "episode_rewards": list(episode_rewards),
+            "success_counts": list(success_counts),
+            "episode_lengths": list(episode_lengths),
+        }
+        return logs
 
 
     def evaluate(self, env, num_episodes: int, max_steps_per_episode: int | None = None, seed: int = 0) -> float:
         """Evaluate the agent."""
         success_count = 0
-        episode_rewards: list[float] = []
+        episode_rewards = []
+        episode_lengths = []
         max_steps = max_steps_per_episode or self.n**2 * 4
         for i in range(num_episodes):
             obs, _ = env.reset(seed=seed + i)
@@ -166,24 +180,31 @@ class QLearningAgent:
             steps = 0
             while steps < max_steps:
                 action = self.sample_action(obs, training=False)
-                obs, reward, terminated, truncated, _ = env.step(action)
+                obs, reward, terminated, truncated, info = env.step(action)
                 total_reward += reward
                 steps += 1
                 if terminated or truncated:
                     break
             
-            if terminated:
+            if info["reached_goal_with_token"]:
                 success_count += 1
             
             episode_rewards.append(total_reward)
+            episode_lengths.append(steps)
+        
         success_rate = success_count / num_episodes
         avg_reward = float(np.mean(episode_rewards))
+        avg_episode_length = float(np.mean(episode_lengths))
+        std_episode_length = float(np.std(episode_lengths))
 
         results = {
             "avg_reward": avg_reward,
             "std_reward": float(np.std(episode_rewards)),
             "success_rate": success_rate,
+            "avg_episode_length": avg_episode_length,
+            "std_episode_length": std_episode_length,
             "episode_rewards": list(episode_rewards),
+            "episode_lengths": list(episode_lengths),
             "num_episodes": num_episodes,
             "max_steps": max_steps,
             "seed": seed,

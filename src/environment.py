@@ -108,9 +108,9 @@ class GridWorldEnv(gym.Env):
             reward += self.collect_reward
 
         if self._agent_pos == (self.n - 1, self.n - 1):
+            terminated = True
             if self._collected:
                 reward += self.goal_reward
-                terminated = True
             else:
                 reward += self.goal_without_token_reward
 
@@ -118,7 +118,7 @@ class GridWorldEnv(gym.Env):
             truncated = True
 
         obs = self._get_obs()
-        info = {}
+        info = {"reached_goal_with_token": self._collected and terminated}
         return obs, reward, terminated, truncated, info
 
     def render(self) -> str | np.ndarray | None:

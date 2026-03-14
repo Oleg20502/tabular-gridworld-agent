@@ -2,6 +2,7 @@
 """Training script for tabular Q-learning on GridWorld."""
 
 import argparse
+import json
 import shutil
 from pathlib import Path
 
@@ -28,7 +29,7 @@ def main():
     agent_cfg = cfg["agent"]
     train_cfg = cfg["train"]
 
-    save_dir = Path(args.save_dir if args.save_dir is not None else train_cfg["save_dir"])
+    save_dir = Path(train_cfg["save_dir"])
     save_dir.mkdir(parents=True, exist_ok=True)
 
     env = GridWorldEnv(
@@ -54,7 +55,7 @@ def main():
     print(f"Training on {env_cfg['n']}x{env_cfg['n']} grid | {n_states} states | {n_episodes} episodes")
     print(f"alpha={agent_cfg['alpha']}, gamma={agent_cfg['gamma']}, epsilon={agent_cfg['epsilon']}\n")
 
-    rewards, success_count = agent.train(
+    logs = agent.train(
         env,
         num_episodes=n_episodes,
         seed=train_cfg.get("seed"),
@@ -65,8 +66,9 @@ def main():
     agent.save(save_dir / "q_table.npy")
     shutil.copy(args.config, save_dir / "config.yaml")
 
-    print(f"\nTrained for {n_episodes} episodes")
-    print(f"Training success rate: {success_count / n_episodes:.2%}")
+    with open(save_dir / "train_logs.json", "w") as f:
+        json.dump(logs, f, indent=2)
+
     print(f"Saved to {save_dir.absolute()}")
 
 

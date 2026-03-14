@@ -14,7 +14,7 @@ from src.q_learning import QLearningAgent
 def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate Q-learning agent on GridWorld")
     parser.add_argument("--save-dir", type=str, required=True, help="Directory with saved Q-table and config")
-    parser.add_argument("--n-episodes", type=int, default=100, help="Number of evaluation episodes")
+    parser.add_argument("--n-episodes", type=int, default=1000, help="Number of evaluation episodes")
     parser.add_argument("--seed", type=int, default=0, help="Seed for evaluation")
     return parser.parse_args()
 
@@ -53,9 +53,11 @@ def main():
 
     results = agent.evaluate(env, args.n_episodes, seed=args.seed)
 
-    print(f"Success rate: {results['success_rate']:.2%}")
+    print(f"Success rate: {results['success_rate']:.1%}")
     print(f"Average reward: {results['avg_reward']:.2f}")
     print(f"STD of reward: {results['std_reward']:.2f}")
+    print(f"Average episode length: {results['avg_episode_length']:.1f}")
+    print(f"STD of episode length: {results['std_episode_length']:.1f}")
 
     with open(save_dir / "eval_results.json", "w") as f:
         json.dump(results, f, indent=2)
