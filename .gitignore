@@ -1,3 +1,7 @@
+# /runs/
+/logs/
+/outputs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -153,6 +157,8 @@ venv.bak/
 
 # mkdocs documentation
 /site
+
+/.cursor/
 
 # mypy
 .mypy_cache/
