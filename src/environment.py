@@ -28,9 +28,9 @@ class GridWorldEnv(gym.Env):
         n: int | None = None,
         size: int | None = None,
         max_steps: int | None = None,
-        step_penalty: float = -0.01,
-        collect_reward: float = 1.0,
-        goal_reward: float = 10.0,
+        step_penalty: float = -1.0,
+        collect_reward: float = 10.0,
+        goal_reward: float = 20.0,
         goal_without_token_reward: float = 0.0,
         render_mode: str | None = None,
     ):

@@ -155,13 +155,13 @@ class QLearningAgent:
         return episode_rewards, success_count
 
 
-    def evaluate(self, env, num_episodes: int, max_steps_per_episode: int | None = None, seed: int | None = None) -> float:
+    def evaluate(self, env, num_episodes: int, max_steps_per_episode: int | None = None, seed: int = 0) -> float:
         """Evaluate the agent."""
         success_count = 0
         episode_rewards: list[float] = []
         max_steps = max_steps_per_episode or self.n**2 * 4
         for i in range(num_episodes):
-            obs, _ = env.reset(seed=None if seed is None else seed + i)
+            obs, _ = env.reset(seed=seed + i)
             total_reward = 0.0
             steps = 0
             while steps < max_steps:

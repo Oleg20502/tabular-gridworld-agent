@@ -2,8 +2,10 @@
 """Training script for tabular Q-learning on GridWorld."""
 
 import argparse
-import json
+import shutil
 from pathlib import Path
+
+import yaml
 
 from src.environment import GridWorldEnv
 from src.q_learning import QLearningAgent
@@ -12,62 +14,61 @@ from src.state_utils import num_states
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train Q-learning agent on GridWorld")
-    parser.add_argument("--n", type=int, default=10, help="Grid size NxN")
-    parser.add_argument("--episodes", type=int, default=1_000, help="Number of training episodes")
-    parser.add_argument("--alpha", type=float, default=0.1, help="Learning rate")
-    parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor")
-    parser.add_argument("--epsilon", type=float, default=0.1, help="Exploration rate")
-    parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducibility")
-    parser.add_argument(
-        "--save-dir",
-        type=str,
-        default="runs/",
-        help="Directory to save Q-table and config",
-    )
+    parser.add_argument("--config", type=str, required=True, help="Path to YAML config file")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
 
-    env = GridWorldEnv(size=args.n)
-    n_states = num_states(args.n)
-    agent = QLearningAgent(
-        n=args.n,
-        alpha=args.alpha,
-        gamma=args.gamma,
-        epsilon=args.epsilon,
+    with open(args.config) as f:
+        cfg = yaml.safe_load(f)
+
+    env_cfg = cfg["env"]
+    agent_cfg = cfg["agent"]
+    train_cfg = cfg["train"]
+
+    save_dir = Path(args.save_dir if args.save_dir is not None else train_cfg["save_dir"])
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    env = GridWorldEnv(
+        n=env_cfg["n"],
+        max_steps=env_cfg.get("max_steps"),
+        step_penalty=env_cfg["step_penalty"],
+        collect_reward=env_cfg["collect_reward"],
+        goal_reward=env_cfg["goal_reward"],
+        goal_without_token_reward=env_cfg["goal_without_token_reward"],
     )
 
-    print(f"Training on {args.n}x{args.n} grid, {n_states} states, {args.episodes} episodes")
-    print(f"alpha={args.alpha}, gamma={args.gamma}, epsilon={args.epsilon}\n")
+    agent = QLearningAgent(
+        n=env_cfg["n"],
+        alpha=agent_cfg["alpha"],
+        gamma=agent_cfg["gamma"],
+        epsilon=agent_cfg["epsilon"],
+        epsilon_decay=agent_cfg["epsilon_decay"],
+        min_epsilon=agent_cfg["min_epsilon"],
+    )
+
+    n_states = num_states(env_cfg["n"])
+    n_episodes = train_cfg["n_episodes"]
+    print(f"Training on {env_cfg['n']}x{env_cfg['n']} grid | {n_states} states | {n_episodes} episodes")
+    print(f"alpha={agent_cfg['alpha']}, gamma={agent_cfg['gamma']}, epsilon={agent_cfg['epsilon']}\n")
 
     rewards, success_count = agent.train(
-        env, num_episodes=args.episodes, seed=args.seed
+        env,
+        num_episodes=n_episodes,
+        seed=train_cfg.get("seed"),
+        max_steps_per_episode=env_cfg.get("max_steps"),
+        log_interval=train_cfg["log_interval"],
     )
 
-    save_dir = Path(args.save_dir)
-    save_dir.mkdir(parents=True, exist_ok=True)
     agent.save(save_dir / "q_table.npy")
-    
-    with open(save_dir / "config.json", "w") as f:
-        json.dump(
-            {
-                "n": args.n,
-                "episodes": args.episodes,
-                "alpha": args.alpha,
-                "gamma": args.gamma,
-                "epsilon": args.epsilon,
-                "num_states": n_states,
-            },
-            f,
-            indent=2,
-        )
+    shutil.copy(args.config, save_dir / "config.yaml")
 
-    print(f"\nTrained for {args.episodes} episodes")
-    success_rate = success_count / args.episodes
-    print(f"Training success rate: {success_rate:.2%}")
-    print(f"\nCheckpoints saved to {save_dir.absolute()}")
+    print(f"\nTrained for {n_episodes} episodes")
+    print(f"Training success rate: {success_count / n_episodes:.2%}")
+    print(f"Saved to {save_dir.absolute()}")
+
 
 if __name__ == "__main__":
     main()
