@@ -4,14 +4,11 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 
-
-# Action mapping: 0=up, 1=down, 2=right, 3=left
-# Up decreases row index, left decreases col index
 ACTION_DELTAS = {
-    0: (-1, 0),  # up
-    1: (1, 0),   # down
-    2: (0, 1),   # right
-    3: (0, -1),  # left
+    0: (-1, 0),
+    1: (1, 0),
+    2: (0, 1),
+    3: (0, -1),
 }
 
 
@@ -34,7 +31,7 @@ class GridWorldEnv(gym.Env):
         step_penalty: float = -0.01,
         collect_reward: float = 1.0,
         goal_reward: float = 10.0,
-        goal_without_token_penalty: float = 0.0,
+        goal_without_token_reward: float = 0.0,
         render_mode: str | None = None,
     ):
         super().__init__()
@@ -43,11 +40,9 @@ class GridWorldEnv(gym.Env):
         self.step_penalty = step_penalty
         self.collect_reward = collect_reward
         self.goal_reward = goal_reward
-        self.goal_without_token_penalty = goal_without_token_penalty
+        self.goal_without_token_reward = goal_without_token_reward
 
         self.action_space = spaces.Discrete(4)
-        # Observation: (agent_x, agent_y, token_x, token_y, collected)
-        # When collected=1, token_x and token_y are dummy (0)
         self.observation_space = spaces.Tuple(
             (
                 spaces.Discrete(self.n),
@@ -108,18 +103,16 @@ class GridWorldEnv(gym.Env):
         terminated = False
         truncated = False
 
-        # Check token collection
         if not self._collected and self._agent_pos == self._token_pos:
             self._collected = True
             reward += self.collect_reward
 
-        # Check goal
         if self._agent_pos == (self.n - 1, self.n - 1):
-            terminated = True
             if self._collected:
                 reward += self.goal_reward
+                terminated = True
             else:
-                reward += self.goal_without_token_penalty
+                reward += self.goal_without_token_reward
 
         if self._step_count >= self.max_steps and not terminated:
             truncated = True

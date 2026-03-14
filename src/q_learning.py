@@ -126,21 +126,21 @@ class QLearningAgent:
             obs, info = env.reset(seed=seed if ep == 0 else None)
             total_reward = 0.0
             steps = 0
-            last_reward = 0.0
 
             while steps < max_steps:
                 action = self.sample_action(obs, training=True)
                 next_obs, reward, terminated, truncated, info = env.step(action)
+
                 self.update(obs, action, reward, next_obs, terminated, truncated)
+                
                 total_reward += reward
-                last_reward = reward
                 obs = next_obs
                 steps += 1
                 if terminated or truncated:
                     break
 
             episode_rewards.append(total_reward)
-            if last_reward > 5:  # Goal reward (10) plus step penalty
+            if terminated:
                 success_count += 1
             self.decay_epsilon()
 
@@ -153,3 +153,40 @@ class QLearningAgent:
                 )
 
         return episode_rewards, success_count
+
+
+    def evaluate(self, env, num_episodes: int, max_steps_per_episode: int | None = None, seed: int | None = None) -> float:
+        """Evaluate the agent."""
+        success_count = 0
+        episode_rewards: list[float] = []
+        max_steps = max_steps_per_episode or self.n**2 * 4
+        for i in range(num_episodes):
+            obs, _ = env.reset(seed=None if seed is None else seed + i)
+            total_reward = 0.0
+            steps = 0
+            while steps < max_steps:
+                action = self.sample_action(obs, training=False)
+                obs, reward, terminated, truncated, _ = env.step(action)
+                total_reward += reward
+                steps += 1
+                if terminated or truncated:
+                    break
+            
+            if terminated:
+                success_count += 1
+            
+            episode_rewards.append(total_reward)
+        success_rate = success_count / num_episodes
+        avg_reward = float(np.mean(episode_rewards))
+
+        results = {
+            "avg_reward": avg_reward,
+            "std_reward": float(np.std(episode_rewards)),
+            "success_rate": success_rate,
+            "episode_rewards": list(episode_rewards),
+            "num_episodes": num_episodes,
+            "max_steps": max_steps,
+            "seed": seed,
+        }
+
+        return results
