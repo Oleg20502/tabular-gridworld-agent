@@ -121,7 +121,7 @@ class QLearningAgent:
         episode_rewards = []
         success_counts = []
         episode_lengths = []
-        max_steps = max_steps_per_episode or self.n**2 * 4
+        max_steps = max_steps_per_episode or env.max_steps
 
         for ep in range(num_episodes):
             obs, info = env.reset(seed=seed if ep == 0 else None)
@@ -138,6 +138,7 @@ class QLearningAgent:
                 steps += 1
                 if terminated or truncated:
                     break
+            
             episode_lengths.append(steps)
             episode_rewards.append(total_reward)
 
@@ -173,9 +174,10 @@ class QLearningAgent:
         success_count = 0
         episode_rewards = []
         episode_lengths = []
-        max_steps = max_steps_per_episode or self.n**2 * 4
+        success_lengths = []
+        max_steps = max_steps_per_episode or env.max_steps
         for i in range(num_episodes):
-            obs, _ = env.reset(seed=seed + i)
+            obs, _ = env.reset(seed=seed if i == 0 else None)
             total_reward = 0.0
             steps = 0
             while steps < max_steps:
@@ -186,16 +188,22 @@ class QLearningAgent:
                 if terminated or truncated:
                     break
             
-            if info["reached_goal_with_token"]:
+            success = info["reached_goal_with_token"]
+            if success:
                 success_count += 1
-            
+
             episode_rewards.append(total_reward)
             episode_lengths.append(steps)
-        
+            if success:
+                success_lengths.append(steps)
+
         success_rate = success_count / num_episodes
         avg_reward = float(np.mean(episode_rewards))
         avg_episode_length = float(np.mean(episode_lengths))
         std_episode_length = float(np.std(episode_lengths))
+
+        avg_success_length = float(np.mean(success_lengths)) if success_lengths else float("nan")
+        std_success_length = float(np.std(success_lengths)) if success_lengths else float("nan")
 
         results = {
             "avg_reward": avg_reward,
@@ -203,6 +211,8 @@ class QLearningAgent:
             "success_rate": success_rate,
             "avg_episode_length": avg_episode_length,
             "std_episode_length": std_episode_length,
+            "avg_success_episode_length": avg_success_length,
+            "std_success_episode_length": std_success_length,
             "episode_rewards": list(episode_rewards),
             "episode_lengths": list(episode_lengths),
             "num_episodes": num_episodes,

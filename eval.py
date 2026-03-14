@@ -51,13 +51,20 @@ def main():
 
     print(f"Evaluating for {args.n_episodes} episodes:")
 
-    results = agent.evaluate(env, args.n_episodes, seed=args.seed)
+    results = agent.evaluate(
+        env,
+        args.n_episodes,
+        max_steps_per_episode=env_cfg.get("max_steps"),
+        seed=args.seed,
+    )
 
     print(f"Success rate: {results['success_rate']:.1%}")
     print(f"Average reward: {results['avg_reward']:.2f}")
     print(f"STD of reward: {results['std_reward']:.2f}")
     print(f"Average episode length: {results['avg_episode_length']:.1f}")
     print(f"STD of episode length: {results['std_episode_length']:.1f}")
+    print(f"Average episode length (successful): {results['avg_success_episode_length']:.1f}")
+    print(f"STD of episode length (successful): {results['std_success_episode_length']:.1f}")
 
     with open(save_dir / "eval_results.json", "w") as f:
         json.dump(results, f, indent=2)
