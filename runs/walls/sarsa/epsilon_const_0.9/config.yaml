@@ -10,19 +10,19 @@ env:
   goal_without_token_reward: 0.0
 
 agent:
-  algorithm: monte_carlo
-  alpha: 0.05            # Lower alpha suits MC since updates are batch, not online
+  algorithm: sarsa
+  alpha: 0.1
   gamma: 0.99
   exploration: epsilon_greedy
-  epsilon: 1.0
-  epsilon_decay: 0.9998
-  min_epsilon: 0.05      # Keep some exploration; MC benefits from diverse trajectories
+  epsilon: 0.7
+  epsilon_decay: 1.0
+  min_epsilon: 0.01
   temperature: 1.0
   temperature_decay: 1.0
   min_temperature: 0.1
 
 train:
-  save_dir: "runs/walls/mc/epsilon_decay_0.9998/"
+  save_dir: "runs/walls/sarsa/epsilon_const_0.7/"
   n_episodes: 20000
   log_interval: 500
   seed: 42
