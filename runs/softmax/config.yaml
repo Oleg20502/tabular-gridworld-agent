@@ -1,0 +1,25 @@
+env:
+  n: 10               # Grid size (NxN)
+  max_steps: 1000
+  step_penalty: 0.0
+  collect_reward: 10.0
+  goal_reward: 20.0
+  goal_without_token_reward: 0.0
+
+agent:
+  alpha: 0.1          # Learning rate
+  gamma: 1.0         # Discount factor
+  exploration: softmax  # "epsilon_greedy" or "softmax"
+  epsilon: 1.0          # Initial exploration rate (epsilon_greedy)
+  epsilon_decay: 1.0  # Multiplicative decay per episode (1.0 = no decay)
+  min_epsilon: 0.01   # Minimum exploration rate
+
+  temperature: 3.0    # Initial softmax temperature (softmax)
+  temperature_decay: 0.9999  # Multiplicative decay per episode (1.0 = no decay)
+  min_temperature: 0.01  # Minimum temperature
+
+train:
+  save_dir: "runs/softmax"
+  n_episodes: 20000
+  log_interval: 500
+  seed: 42
