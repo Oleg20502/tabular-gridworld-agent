@@ -14,15 +14,15 @@ agent:
   alpha: 0.05            # Lower alpha suits MC since updates are batch, not online
   gamma: 0.99
   exploration: epsilon_greedy
-  epsilon: 1.0
-  epsilon_decay: 0.9998
+  epsilon: 0.9
+  epsilon_decay: 1
   min_epsilon: 0.05      # Keep some exploration; MC benefits from diverse trajectories
   temperature: 1.0
   temperature_decay: 1.0
   min_temperature: 0.1
 
 train:
-  save_dir: "runs/walls/mc/epsilon_decay_0.9998/"
+  save_dir: "runs/walls/mc/epsilon_const_0.9/"
   n_episodes: 20000
   log_interval: 500
   seed: 42

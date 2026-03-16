@@ -77,6 +77,7 @@ def main():
 
     save_dir = Path(train_cfg["save_dir"])
     save_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy(args.config, save_dir / "config.yaml")
 
     env = make_env(env_cfg)
     agent = build_agent(env_cfg, agent_cfg)
@@ -100,7 +101,6 @@ def main():
     )
 
     agent.save(save_dir / "q_table.npy")
-    shutil.copy(args.config, save_dir / "config.yaml")
 
     with open(save_dir / "train_logs.json", "w") as f:
         json.dump(logs, f, indent=2)
