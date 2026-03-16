@@ -29,10 +29,10 @@ An agent navigates an N×N grid, collects a token, and reaches the goal. The rew
 |---|---|
 | Each step | −1 |
 | Collecting token | +10 |
-| Reaching goal *with* token | +10 |
+| Reaching goal *with* token | +20 |
 | Reaching goal *without* token | 0 |
 
-The large step penalty makes the agent learn short paths. Without it, any path that eventually reaches the goal has the same total reward, so the agent has no incentive to improve.
+In out experiments we override the defaults.
 
 ---
 
