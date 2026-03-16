@@ -196,7 +196,7 @@ Additionally $\varepsilon$ can decay each episode: $\varepsilon \leftarrow \max(
 
 All actions are sampled proportionally to their exponentiated Q-values, controlled by a temperature $\tau > 0$:
 
-$$\pi(a \mid s) = \frac{\exp\!\left(Q(s, a)/\tau\right)}{\sum_{a'} \exp\!\left(Q(s, a')/\tau\right)}$$
+$$\pi(a \mid s) = \frac{\exp\left(Q(s, a)/\tau\right)}{\sum_{a'} \exp\left(Q(s, a')/\tau\right)}$$
 
 - High $\tau$: near-uniform distribution (more exploration)
 - Low $\tau$: distribution concentrates on the greedy action
@@ -210,28 +210,92 @@ $\tau$ decays multiplicatively each episode: $\tau \leftarrow \max(\tau_{\min},\
 
 Experiments were run on 10×10 GridWorld and GridWorld-with-Walls environments with 20,000 training episodes.
 
-### Reward Shaping
+In all our experiments we used discounting factor $\gamma = 0.99$. Learning rate $alpha$ for SARSA and Q-learning is0.1 and for Monte Carlo control it is 0.05.
 
-The reward structure has a large impact on convergence:
+For measuring the performance of the methods we use:
+-  Success Rate: the ratio of successfully terminated episodes where agent collected the token and reached the goal
+- Mean (successful) episodes length: the mean length of all successful epsiodes
 
+### 1. Reward Shaping
+
+In this section we run experiments only with simple GridWorld environment without walls. Also, as for now we use only Q-learning algorithm.
+
+The reward structure has a large impact on convergence. We test 2 reward patterns:
+- 1. **Step penalty** (`step_penalty = −1`): in theory should encourage short paths
 - **No step penalty** (`step_penalty = 0`): in theory may provide unoptimal paths but doesn't penalize exploration
-- **Step penalty** (`step_penalty = −1`): in theory should encourage short
 
-### ε-Greedy vs. Softmax
+We first run experiments with `step_penalty = −1`
 
-Both strategies were tested with and without decay schedules.
+![Mean episode reward](assets/epsilon_const_w_step_penalty_rewards.png)
 
-| Setting | Behaviour |
-|---|---|
-| **Constant ε** | Fixed exploration throughout; never fully exploits. |
-| **Decaying ε** (`ε_decay = 0.9999`) | Exploration tapers off; converges to near-greedy policy. |
-| **Constant τ** | Temperature stays high; stochastic even in late training. |
-| **Decaying τ** (`τ_decay = 0.9999`) | Similar to decaying ε but softer early-stage exploration; often finds better paths sooner because it does not waste steps on purely random actions. |
+Mean episode reward (undiscounted) during training for different epsilon values for Q-learning algorithm.
 
-Key finding: **softmax with decay** tends to converge more smoothly than ε-greedy with decay because even during exploration it still prefers actions with higher Q-values, rather than selecting uniformly at random.
+![Mean episode reward](assets/epsilon_const_w_step_penalty_episode_length.png)
+
+Mean episodes lengths (undiscounted) during training for different epsilon values for Q-learning algorithm.
+
+In this particular case epsilon value has little effect on the results.
 
 
-### Example of a trained agent navigating in the environment with walls
+#### Full comparison:
+
+#### 1. **Step penalty** (`step_penalty = −1`)
+| Method         | Parameters                       | Average episode length | Success Rate |
+|----------------|----------------------------------|------------------------|--------------|
+| Epsilon const  | ε = 0.15                         | 35.69                  | 0.982        |
+| Epsilon decay  | ε = 1, Decay = 0.9999            | 41.56                  | 0.976        |
+| Softmax        | Temperature = 3, Decay = 0.9999  | 40.62                  | 0.977        |
+
+
+#### **No step penalty** (`step_penalty = 0`)
+| Method         | Parameters                         | Average episode length | Success Rate |
+|----------------|------------------------------------|------------------------|--------------|
+| Epsilon const  | ε = 0.9                            | 18                     | 1.0          |
+| Epsilon decay  | ε = 1, decay = 0.9999              | 18.02                  | 1.0          |
+| Softmax        | Temperature = 3, decay = 0.9999    | 18.3                   | 1.0          |
+
+
+We can see that agent performs better when `step_penalty = 0`. Further, we use only this setting.
+
+
+### 2. Methods comparion
+
+Now to make learning harder for agents we switch to environmnet with walls.
+
+First, we search optimal action sampling hyperparameters for Q-learning, SARSA and Monte Carlo control. Results for each method are listed below:
+
+#### 1. **Q-learning**
+| Method              | Parameters                        | Average episode length | Success Rate |
+|---------------------|-----------------------------------|------------------------|--------------|
+| Epsilon const       | ε = 0.9                           | 29                     | 0.86         |
+| Epsilon decay       | ε = 1.0, decay = 0.9999           | 25                     | 0.48         |
+| Softmax with decay  | Temperature = 3, decay = 0.9999   | 31                     | 0.95         |
+
+
+#### 2. **SARSA**
+| Method             | Parameters                        | Average episode length | Success Rate |
+|--------------------|-----------------------------------|------------------------|--------------|
+| Epsilon const      | ε = 0.9                           | 27                     | 0.64         |
+| Epsilon decay      | ε = 1.0, Decay = 0.9999           | 25                     | 0.37         |
+| Softmax with decay | Temperature = 5, Decay = 0.9999   | 30                     | 0.95         |
+
+#### 3. **Monte Carlo control**
+| Method             | Parameters                        | Average episode length | Success Rate |
+|--------------------|-----------------------------------|------------------------|--------------|
+| Epsilon const      | ε = 0.9                           | 26                     | 0.64         |
+| Epsilon decay      | ε = 1.0, Decay = 0.9999           | 30                     | 0.87         |
+| Softmax with decay | Temperature = 3, Decay = 0.9999   | 32                     | 0.83         |
+
+
+All the methods proved to be quite sensitive to hyperparameters. We can see that SARSA and Q-learning perform on par. They both reach the best success rate of 0.95 for Softmax with decay action sampling. Monte Carlo control method doesn't reach Success rate of 0.9.
+
+Interestingly, the best average episode length is not reached for the optimal action sampling strategy. Actually, it is quite opposite: when success rate it the lowest then the average episode length is the lowest. This pattern is consistent for all 3 methods.
+
+We think that this phenomena happens because of concentrated exploration of a narrow part of state space. When agent has low success rate it didn't have enough exploration. There are many specific token positions which agent doesn't know how to reach. However, due to such limited scope, during training agent explores known to him part of the environment very well. Actually, it explores this narrow region of token positions better than the agents who explored all the token positions uniformly well. So, on validation when accounting only for successful episodes it manages to reach goal by a more affecient path.
+
+Additionally, longer paths are harder for agent to accomplish. So suppose we have 2 agents: one who accomplished long path and the other who doesn't. In the first case the path makes the average episode length statistic bigger but it also makes success rate better. But in the second case it gives no contribution to the average episode length worsening only success rate.
+
+## Example of a trained agent navigating in the environment with walls
 
 ![Q-learning agent in GridWorld](runs/walls/epsilon_decay/rollout.gif)
 
