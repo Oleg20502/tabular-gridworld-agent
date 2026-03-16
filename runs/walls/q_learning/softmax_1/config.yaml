@@ -17,12 +17,12 @@ agent:
   epsilon: 1.0
   epsilon_decay: 0.9998
   min_epsilon: 0.01
-  temperature: 5.0
+  temperature: 3.0
   temperature_decay: 0.9999
   min_temperature: 0.01
 
 train:
-  save_dir: "runs/walls/q_learning/softmax_2"
+  save_dir: "runs/walls/q_learning/softmax_1"
   n_episodes: 20000
   log_interval: 500
   seed: 42

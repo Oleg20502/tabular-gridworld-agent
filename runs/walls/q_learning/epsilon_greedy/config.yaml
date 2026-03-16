@@ -13,16 +13,16 @@ agent:
   algorithm: q_learning
   alpha: 0.1
   gamma: 0.99
-  exploration: softmax
-  epsilon: 1.0
-  epsilon_decay: 0.9998
+  exploration: epsilon_greedy
+  epsilon: 0.9
+  epsilon_decay: 1.0
   min_epsilon: 0.01
-  temperature: 5.0
+  temperature: 4.0
   temperature_decay: 0.9999
   min_temperature: 0.01
 
 train:
-  save_dir: "runs/walls/q_learning/softmax_2"
+  save_dir: "runs/walls/q_learning/epsilon_greedy"
   n_episodes: 20000
   log_interval: 500
   seed: 42
