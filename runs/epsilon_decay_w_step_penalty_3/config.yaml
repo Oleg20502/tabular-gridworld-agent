@@ -10,8 +10,8 @@ agent:
   alpha: 0.1          # Learning rate
   gamma: 0.99         # Discount factor
   exploration: epsilon_greedy  # "epsilon_greedy" or "softmax"
-  epsilon: 0.25          # Initial exploration rate (epsilon_greedy)
-  epsilon_decay: 1.0  # Multiplicative decay per episode (1.0 = no decay)
+  epsilon: 0.75          # Initial exploration rate (epsilon_greedy)
+  epsilon_decay: 0.9999  # Multiplicative decay per episode (1.0 = no decay)
   min_epsilon: 0.01   # Minimum exploration rate
 
   temperature: 4.0    # Initial softmax temperature (softmax)
@@ -19,7 +19,7 @@ agent:
   min_temperature: 0.01  # Minimum temperature
 
 train:
-  save_dir: "runs/epsilon_const_w_step_penalty_5"
+  save_dir: "runs/epsilon_decay_w_step_penalty_3"
   n_episodes: 20000
   log_interval: 500
   seed: 42
