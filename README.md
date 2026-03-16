@@ -1,6 +1,6 @@
-# Tabular Q-Learning for GridWorld
+# Tabular Q function methods for gridworld environments
 
-A clean Python implementation of four classic tabular reinforcement learning algorithms — **Q-Learning**, **SARSA**, **Monte Carlo Control**, and **Q(λ)** — trained and evaluated on a custom GridWorld environment built with the [Gymnasium](https://gymnasium.farama.org/) API.
+A Python implementation of three tabular reinforcement learning algorithms — **Q-Learning**, **SARSA** and **Monte Carlo Control**— trained and evaluated on a custom GridWorld environment built with the Gymnasium API.
 
 ---
 
@@ -114,7 +114,7 @@ For each episode:
 
 SARSA bootstraps from the Q-value of the **action actually taken** in the next state $a'$, making it on-policy. The policy used to generate $(s, a, r, s', a')$ is the same policy being improved.
 
-$$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma\, Q(s', a') - Q(s, a) \right]$$
+$$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma Q(s', a') - Q(s, a) \right]$$
 
 Because $a'$ is sampled from the current (exploratory) policy, SARSA is more conservative than Q-Learning — it accounts for the fact that the agent will continue to explore in $s'$.
 
@@ -175,51 +175,6 @@ For each episode:
 
 ---
 
-### Q(λ) — Watkins's Q with Eligibility Traces
-
-Q(λ) generalises Q-Learning by maintaining **eligibility traces** $e(s, a)$ that accumulate credit for recently visited state–action pairs. This allows TD errors to propagate backwards through the trajectory, combining the sample efficiency of TD with the multi-step credit assignment of Monte Carlo.
-
-The key parameter $\lambda \in [0, 1]$ controls the trade-off:
-- $\lambda = 0$: reduces to one-step Q-Learning
-- $\lambda = 1$: approaches full Monte Carlo returns (while remaining off-policy)
-
-**Watkins's cut:** When an exploratory (non-greedy) action is taken, traces are reset to zero. This preserves the off-policy convergence guarantee by preventing credit from propagating through exploratory transitions.
-
-$$\delta_t = r_t + \gamma \max_{a'} Q(s_{t+1}, a') - Q(s_t, a_t)$$
-
-$$e(s_t, a_t) \mathrel{+}= 1 \quad \text{(accumulating trace)}$$
-
-$$Q(s, a) \leftarrow Q(s, a) + \alpha\, \delta_t\, e(s, a) \quad \forall\, s, a$$
-
-$$e(s, a) \leftarrow \begin{cases} \gamma\lambda\, e(s, a) & \text{if greedy action was taken} \\ 0 & \text{if exploratory action (Watkins's cut)} \end{cases}$$
-
-```
-Algorithm: Watkins's Q(λ)
-─────────────────────────────────────────────────────────
-Initialise Q(s, a) = 0,  e(s, a) = 0  for all s, a
-For each episode:
-    e ← 0  (reset all traces)
-    s ← env.reset()
-    For each step:
-        a ← ε-greedy(Q, s)
-        s', r, done ← env.step(a)
-        a* ← argmax_a' Q(s', a')
-        δ ← r + γ · Q(s', a*) − Q(s, a)
-        e(s, a) ← e(s, a) + 1
-        Q ← Q + α · δ · e
-        if done:
-            e ← 0
-        elif a == a*:
-            e ← γλ · e
-        else:
-            e ← 0
-        s ← s'
-        if done: break
-    ε ← max(ε_min, ε · ε_decay)
-```
-
----
-
 ## Exploration Strategies
 
 All agents support two exploration strategies, switchable via the config.
@@ -228,15 +183,20 @@ All agents support two exploration strategies, switchable via the config.
 
 With probability $\varepsilon$ the agent selects a random action; otherwise it acts greedily:
 
-$$a = \begin{cases} \text{random} & \text{with probability } \varepsilon \\ \arg\max_{a'} Q(s, a') & \text{with probability } 1 - \varepsilon \end{cases}$$
+$$
+a = \begin{cases}
+\text{random} & \text{with probability } \varepsilon
+\newline \arg\max_{a'} Q(s, a') & \text{with probability } 1 - \varepsilon
+\end{cases}
+$$
 
-$\varepsilon$ decays multiplicatively each episode: $\varepsilon \leftarrow \max(\varepsilon_{\min},\ \varepsilon \cdot d_\varepsilon)$.
+Additionally $\varepsilon$ can decay each episode: $\varepsilon \leftarrow \max(\varepsilon_{\min},\ \varepsilon \cdot d_\varepsilon)$.
 
 ### Softmax with temperature
 
 All actions are sampled proportionally to their exponentiated Q-values, controlled by a temperature $\tau > 0$:
 
-$$\pi(a \mid s) = \frac{\exp\!\left(Q(s, a)\,/\,\tau\right)}{\sum_{a'} \exp\!\left(Q(s, a')\,/\,\tau\right)}$$
+$$\pi(a \mid s) = \frac{\exp\!\left(Q(s, a)/\tau\right)}{\sum_{a'} \exp\!\left(Q(s, a')/\tau\right)}$$
 
 - High $\tau$: near-uniform distribution (more exploration)
 - Low $\tau$: distribution concentrates on the greedy action
@@ -270,6 +230,12 @@ Both strategies were tested with and without decay schedules.
 
 Key finding: **softmax with decay** tends to converge more smoothly than ε-greedy with decay because even during exploration it still prefers actions with higher Q-values, rather than selecting uniformly at random.
 
+
+### Example of a trained agent navigating in the environment with walls
+
+![Q-learning agent in GridWorld](runs/walls/epsilon_decay/rollout.gif)
+
+
 ---
 
 ## Usage
@@ -296,7 +262,7 @@ env:
   goal_reward: 10.0
 
 agent:
-  algorithm: q_learning       # q_learning | sarsa | monte_carlo | q_lambda
+  algorithm: q_learning       # q_learning | sarsa | monte_carlo
   alpha: 0.1
   gamma: 0.99
   exploration: softmax        # epsilon_greedy | softmax
