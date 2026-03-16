@@ -1,0 +1,28 @@
+env:
+  type: GridWorldWithWallsEnv
+  n: 10
+  wall_frac: 0.4
+  seed_walls: 0
+  max_steps: 1000
+  step_penalty: 0
+  collect_reward: 10.0
+  goal_reward: 20.0
+  goal_without_token_reward: 0.0
+
+agent:
+  algorithm: monte_carlo
+  alpha: 0.05            # Lower alpha suits MC since updates are batch, not online
+  gamma: 0.99
+  exploration: softmax
+  epsilon: 1.0
+  epsilon_decay: 0.9998
+  min_epsilon: 0.05      # Keep some exploration; MC benefits from diverse trajectories
+  temperature: 5.0
+  temperature_decay: 0.9999
+  min_temperature: 0.1
+
+train:
+  save_dir: "runs/walls/mc/temp_decay_5.0/"
+  n_episodes: 20000
+  log_interval: 500
+  seed: 42
