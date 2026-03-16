@@ -10,7 +10,6 @@ env:
   goal_without_token_reward: 0.0
 
 agent:
-  algorithm: q_learning  # q_learning | sarsa | monte_carlo | q_lambda
   alpha: 0.1
   gamma: 0.99
   exploration: epsilon_greedy
