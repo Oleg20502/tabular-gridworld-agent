@@ -7,7 +7,7 @@ from pathlib import Path
 
 import yaml
 
-from src.environment import GridWorldEnv
+from src.environment import make_env
 from src.q_learning import QLearningAgent
 
 
@@ -30,14 +30,7 @@ def main():
     env_cfg = cfg["env"]
     agent_cfg = cfg["agent"]
 
-    env = GridWorldEnv(
-        n=env_cfg["n"],
-        max_steps=env_cfg.get("max_steps"),
-        step_penalty=env_cfg["step_penalty"],
-        collect_reward=env_cfg["collect_reward"],
-        goal_reward=env_cfg["goal_reward"],
-        goal_without_token_reward=env_cfg["goal_without_token_reward"],
-    )
+    env = make_env(env_cfg)
 
     agent = QLearningAgent(
         n=env_cfg["n"],

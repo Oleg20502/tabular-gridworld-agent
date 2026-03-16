@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-from src.environment import GridWorldEnv
+from src.environment import make_env
 from src.q_learning import QLearningAgent
 from src.state_utils import num_states
 
@@ -32,14 +32,7 @@ def main():
     save_dir = Path(train_cfg["save_dir"])
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    env = GridWorldEnv(
-        n=env_cfg["n"],
-        max_steps=env_cfg.get("max_steps"),
-        step_penalty=env_cfg["step_penalty"],
-        collect_reward=env_cfg["collect_reward"],
-        goal_reward=env_cfg["goal_reward"],
-        goal_without_token_reward=env_cfg["goal_without_token_reward"],
-    )
+    env = make_env(env_cfg)
 
     agent = QLearningAgent(
         n=env_cfg["n"],
