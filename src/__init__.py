@@ -6,6 +6,7 @@ from .sarsa import SARSAAgent
 from .monte_carlo import MonteCarloAgent
 from .q_lambda import QLambdaAgent
 from .state_utils import state_to_index, num_states
+from .visualization import make_gif
 
 __all__ = [
     "GridWorldEnv",
@@ -17,4 +18,5 @@ __all__ = [
     "QLambdaAgent",
     "state_to_index",
     "num_states",
+    "make_gif",
 ]
