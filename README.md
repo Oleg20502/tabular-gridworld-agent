@@ -81,7 +81,7 @@ All agents maintain a tabular **Q-function** $Q: \mathcal{S} \times \mathcal{A} 
 
 ---
 
-### Q-Learning (off-policy TD)
+### Q-Learning
 
 Q-Learning learns the optimal Q-function directly, independently of the behaviour policy, by bootstrapping from the **maximum** Q-value in the next state.
 
@@ -110,7 +110,7 @@ For each episode:
 
 ---
 
-### SARSA (on-policy TD)
+### SARSA
 
 SARSA bootstraps from the Q-value of the **action actually taken** in the next state $a'$, making it on-policy. The policy used to generate $(s, a, r, s', a')$ is the same policy being improved.
 
@@ -210,7 +210,7 @@ $\tau$ decays multiplicatively each episode: $\tau \leftarrow \max(\tau_{\min},\
 
 Experiments were run on 10×10 GridWorld and GridWorld-with-Walls environments with 20,000 training episodes.
 
-In all our experiments we used discounting factor $\gamma = 0.99$. Learning rate $alpha$ for SARSA and Q-learning is0.1 and for Monte Carlo control it is 0.05.
+In all our experiments we used discounting factor $\gamma = 0.99$. Learning rate $alpha$ for SARSA and Q-learning is 0.1 and for Monte Carlo control it is 0.05.
 
 For measuring the performance of the methods we use:
 -  Success Rate: the ratio of successfully terminated episodes where agent collected the token and reached the goal
@@ -221,8 +221,8 @@ For measuring the performance of the methods we use:
 In this section we run experiments only with simple GridWorld environment without walls. Also, as for now we use only Q-learning algorithm.
 
 The reward structure has a large impact on convergence. We test 2 reward patterns:
-- 1. **Step penalty** (`step_penalty = −1`): in theory should encourage short paths
-- **No step penalty** (`step_penalty = 0`): in theory may provide unoptimal paths but doesn't penalize exploration
+1. **Step penalty** (`step_penalty = −1`): in theory should encourage short paths
+2. **No step penalty** (`step_penalty = 0`): in theory may provide unoptimal paths but doesn't penalize exploration
 
 We first run experiments with `step_penalty = −1`
 
