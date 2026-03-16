@@ -4,13 +4,13 @@ env:
   wall_frac: 0.4
   seed_walls: 0
   max_steps: 1000
-  step_penalty: -0.01
+  step_penalty: 0
   collect_reward: 10.0
   goal_reward: 20.0
   goal_without_token_reward: 0.0
 
 agent:
-  algorithm: q_learning  # q_learning | sarsa | monte_carlo | q_lambda
+  algorithm: q_learning
   alpha: 0.1
   gamma: 0.99
   exploration: epsilon_greedy
@@ -22,7 +22,7 @@ agent:
   min_temperature: 0.01
 
 train:
-  save_dir: "runs/walls/epsilon_const_1.0"
+  save_dir: "runs/walls/q_learning/"
   n_episodes: 20000
   log_interval: 500
   seed: 42

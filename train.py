@@ -34,6 +34,8 @@ AGENT_CLASSES = {
 def parse_args():
     parser = argparse.ArgumentParser(description="Train a tabular RL agent on GridWorld")
     parser.add_argument("--config", type=str, required=True, help="Path to YAML config file")
+    parser.add_argument("--n-episodes", type=int, default=1000, help="Number of evaluation episodes")
+    parser.add_argument("--seed", type=int, default=0, help="Seed for evaluation")
     return parser.parse_args()
 
 
@@ -104,6 +106,34 @@ def main():
         json.dump(logs, f, indent=2)
 
     print(f"Saved to {save_dir.absolute()}")
+
+
+    # Evaluation
+    env = make_env(env_cfg)
+
+    agent = build_agent(env_cfg, agent_cfg)
+    agent.load(save_dir / "q_table.npy")
+
+    print(f"Evaluating for {args.n_episodes} episodes:")
+
+    results = agent.evaluate(
+        env,
+        args.n_episodes,
+        max_steps_per_episode=env_cfg.get("max_steps"),
+        seed=args.seed,
+    )
+
+    print(f"Success rate: {results['success_rate']:.1%}")
+    print(f"Average reward: {results['avg_reward']:.2f}")
+    print(f"STD of reward: {results['std_reward']:.2f}")
+    print(f"Average episode length: {results['avg_episode_length']:.1f}")
+    print(f"STD of episode length: {results['std_episode_length']:.1f}")
+    print(f"Average episode length (successful): {results['avg_success_episode_length']:.1f}")
+    print(f"STD of episode length (successful): {results['std_success_episode_length']:.1f}")
+
+    with open(save_dir / "eval_results.json", "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"Results saved to {(save_dir / 'eval_results.json').absolute()}")
 
 
 if __name__ == "__main__":
