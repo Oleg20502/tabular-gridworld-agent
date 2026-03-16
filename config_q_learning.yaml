@@ -1,0 +1,28 @@
+env:
+  type: GridWorldWithWallsEnv
+  n: 10
+  wall_frac: 0.4
+  seed_walls: 0
+  max_steps: 1000
+  step_penalty: 0
+  collect_reward: 10.0
+  goal_reward: 20.0
+  goal_without_token_reward: 0.0
+
+agent:
+  algorithm: q_learning
+  alpha: 0.1
+  gamma: 0.99
+  exploration: epsilon_greedy
+  epsilon: 1.0
+  epsilon_decay: 1
+  min_epsilon: 0.01
+  temperature: 4.0
+  temperature_decay: 0.9999
+  min_temperature: 0.01
+
+train:
+  save_dir: "runs/walls/q_learning/"
+  n_episodes: 20000
+  log_interval: 500
+  seed: 42
